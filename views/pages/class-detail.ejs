@@ -1,0 +1,130 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex justify-between items-start flex-wrap gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800"><%= classInfo.class_name %></h1>
+            <% if (classInfo.description) { %>
+                <p class="text-gray-600 mt-2"><%= classInfo.description %></p>
+            <% } %>
+        </div>
+        <a href="/classes" class="text-purple-600 hover:underline">← Назад к классам</a>
+    </div>
+</div>
+
+<% if (archetypes && archetypes.length > 0) { %>
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold mb-4">🔮 Архетипы</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <% for (var i = 0; i < archetypes.length; i++) { %>
+                <% var arch = archetypes[i]; %>
+                <a href="/archetype/<%= encodeURIComponent(classInfo.class_name) %>/<%= encodeURIComponent(arch.name) %>" 
+                   class="block border rounded p-3 hover:bg-purple-50 transition">
+                    <div class="font-semibold text-purple-700"><%= arch.name %></div>
+                    <% if (arch.description) { %>
+                        <div class="text-sm text-gray-500 mt-1"><%= arch.description.substring(0, 100) %></div>
+                    <% } %>
+                </a>
+            <% } %>
+        </div>
+    </div>
+<% } %>
+
+<div>
+    <div class="flex gap-2 border-b mb-4">
+        <button class="tablinks px-4 py-2 rounded-t hover:bg-gray-100 transition" onclick="openTab(event, 'abilities')">⚔️ Умения</button>
+        <button class="tablinks px-4 py-2 rounded-t hover:bg-gray-100 transition" onclick="openTab(event, 'spells')">✨ Заклинания</button>
+    </div>
+    
+    <div id="abilities" class="tabcontent bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">Умения класса</h2>
+        <%
+        var abilitiesExist = false;
+        for (var lvl = 1; lvl <= 20; lvl++) {
+            if (abilitiesByLevel[lvl] && abilitiesByLevel[lvl].length > 0) {
+                abilitiesExist = true;
+                break;
+            }
+        }
+        %>
+        <% if (abilitiesExist) { %>
+            <% for (var level = 1; level <= 20; level++) { %>
+                <% if (abilitiesByLevel[level] && abilitiesByLevel[level].length > 0) { %>
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold border-b pb-2 mb-3">Уровень <%= level %></h3>
+                        <div class="space-y-3">
+                            <% for (var j = 0; j < abilitiesByLevel[level].length; j++) { %>
+                                <% var ability = abilitiesByLevel[level][j]; %>
+                                <div class="border-l-4 border-purple-600 pl-4">
+                                    <div class="font-bold"><%= ability.name %></div>
+                                    <div class="text-gray-700 mt-1"><%- (ability.description || '').replace(/\r\n/g, '<br>') %></div>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% } %>
+            <% } %>
+        <% } else { %>
+            <p class="text-gray-500">У этого класса нет особых умений</p>
+        <% } %>
+    </div>
+    
+    <div id="spells" class="tabcontent bg-white rounded-lg shadow p-6" style="display: none;">
+        <h2 class="text-xl font-bold mb-4">Заклинания класса</h2>
+        <%
+        var spellsExist = false;
+        for (var lvl = 0; lvl <= 9; lvl++) {
+            if (spellsByLevel[lvl] && spellsByLevel[lvl].length > 0) {
+                spellsExist = true;
+                break;
+            }
+        }
+        %>
+        <% if (spellsExist) { %>
+            <% for (var level = 0; level <= 9; level++) { %>
+                <% if (spellsByLevel[level] && spellsByLevel[level].length > 0) { %>
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold border-b pb-2 mb-3">
+                            <%= level === 0 ? 'Заговоры (0 уровень)' : level + ' уровень' %>
+                        </h3>
+                        <div>
+                            <% for (var k = 0; k < spellsByLevel[level].length; k++) { %>
+                                <% var spell = spellsByLevel[level][k]; %>
+                                <div class="border-l-4 border-blue-600 pl-4 mb-3">
+                                    <div class="font-bold"><%= spell.name %></div>
+                                    <div class="text-sm text-gray-500"><%= spell.school %></div>
+                                    <div class="text-gray-700 mt-1"><%- (spell.description || '').replace(/\r\n/g, '<br>') %></div>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% } %>
+            <% } %>
+        <% } else { %>
+            <p class="text-gray-500">Этот класс не использует заклинания</p>
+        <% } %>
+    </div>
+</div>
+
+<script>
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var defaultTab = document.querySelector('.tablinks');
+    if (defaultTab) defaultTab.click();
+});
+</script>
+
+<%- include('../partials/footer') %>

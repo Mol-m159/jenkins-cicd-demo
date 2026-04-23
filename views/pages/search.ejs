@@ -1,0 +1,215 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="max-w-6xl mx-auto">
+    <!-- Форма поиска с расширенными фильтрами -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h1 class="text-2xl font-bold mb-4">📖 Поиск заклинаний</h1>
+        
+        <form method="get" action="/search">
+            <!-- Основная строка поиска -->
+            <div class="flex flex-col gap-2 sm:flex-row mb-4">
+                <input type="text" name="q" value="<%= query %>" 
+                       placeholder="Название заклинания..."
+                       class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600">
+                <button type="submit" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition">
+                    🔍 Найти
+                </button>
+            </div>
+            
+            <!-- Фильтры -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Фильтр по уровню -->
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Уровень</label>
+                    <select name="level" class="w-full border rounded-lg px-3 py-2">
+                        <option value="">Все уровни</option>
+                        <option value="0" <%= level == '0' ? 'selected' : '' %>>Заговоры (0)</option>
+                        <option value="1" <%= level == '1' ? 'selected' : '' %>>1 уровень</option>
+                        <option value="2" <%= level == '2' ? 'selected' : '' %>>2 уровень</option>
+                        <option value="3" <%= level == '3' ? 'selected' : '' %>>3 уровень</option>
+                        <option value="4" <%= level == '4' ? 'selected' : '' %>>4 уровень</option>
+                        <option value="5" <%= level == '5' ? 'selected' : '' %>>5 уровень</option>
+                        <option value="6" <%= level == '6' ? 'selected' : '' %>>6 уровень</option>
+                        <option value="7" <%= level == '7' ? 'selected' : '' %>>7 уровень</option>
+                        <option value="8" <%= level == '8' ? 'selected' : '' %>>8 уровень</option>
+                        <option value="9" <%= level == '9' ? 'selected' : '' %>>9 уровень</option>
+                    </select>
+                </div>
+                
+                <!-- Фильтр по школе -->
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Школа магии</label>
+                    <select name="school" class="w-full border rounded-lg px-3 py-2">
+                        <option value="">Все школы</option>
+                        <% const schools = ['Ограждение', 'Воплощение', 'Вызов', 'Иллюзия', 'Некромантия', 'Очарование', 'Преобразование', 'Прорицание']; %>
+                        <% schools.forEach(s => { %>
+                            <option value="<%= s %>" <%= school === s ? 'selected' : '' %>><%= s %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                
+                <!-- Фильтр по классу -->
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Класс</label>
+                    <select name="class" id="classFilter" class="w-full border rounded-lg px-3 py-2">
+                        <option value="">Все классы</option>
+                        <% if (classes && classes.length) { %>
+                            <% classes.forEach(cls => { %>
+                                <option value="<%= cls.class_name %>" <%= selectedClass === cls.class_name ? 'selected' : '' %>>
+                                    <%= cls.class_name %>
+                                </option>
+                            <% }) %>
+                        <% } %>
+                    </select>
+                </div>
+                
+                <!-- Фильтр по архетипу (зависит от класса) -->
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Архетип</label>
+                    <select name="archetype" id="archetypeFilter" class="w-full border rounded-lg px-3 py-2">
+                        <option value="">Все архетипы</option>
+                        <% if (archetypes && archetypes.length) { %>
+                            <% archetypes.forEach(arch => { 
+                                const showClass = selectedClass && arch.class === selectedClass;
+                            %>
+                                <option value="<%= arch.name %>" 
+                                        data-class="<%= arch.class %>"
+                                        <%= (!selectedClass && archetype === arch.name) || (selectedClass && archetype === arch.name) ? 'selected' : '' %>
+                                        style="<%= selectedClass && arch.class !== selectedClass ? 'display:none' : '' %>">
+                                    <%= arch.class %> → <%= arch.name %>
+                                </option>
+                            <% }) %>
+                        <% } %>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Кнопка сброса фильтров -->
+            <div class="mt-4 text-right">
+                <a href="/search" class="text-sm text-gray-500 hover:text-purple-600 transition">
+                    ✖️ Сбросить все фильтры
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Результаты -->
+    <% if (spells.length > 0) { %>
+        <div class="mb-4 text-sm text-gray-500">
+            Найдено заклинаний: <%= spells.length %>
+        </div>
+        
+        <div class="space-y-4">
+            <% spells.forEach(spell => { %>
+                <div class="bg-white rounded-lg shadow p-6 hover:shadow-md transition">
+                    <!-- Заголовок -->
+                    <div class="flex justify-between items-start flex-wrap gap-2 mb-3">
+                        <h2 class="text-xl font-bold text-purple-800"><%= spell.name %></h2>
+                        <div class="flex gap-2">
+                            <span class="bg-gray-200 px-3 py-1 rounded-full text-sm">
+                                Уровень <%= spell.level %>
+                            </span>
+                            <span class="bg-blue-100 px-3 py-1 rounded-full text-sm">
+                                <%= spell.school %>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Мета-информация -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-sm bg-gray-50 rounded-lg p-3">
+                        <% if (spell.range_spell !== undefined && spell.range_spell !== null) { %>
+                            <div>
+                                <span class="text-gray-500">📏 Дистанция:</span>
+                                <span class="font-medium block"><%= spell.range_spell %> футов</span>
+                            </div>
+                        <% } %>
+                        <% if (spell.components) { %>
+                            <div>
+                                <span class="text-gray-500">🔮 Компоненты:</span>
+                                <span class="font-medium block"><%= spell.components %></span>
+                            </div>
+                        <% } %>
+                        <% if (spell.duration) { %>
+                            <div>
+                                <span class="text-gray-500">⌛ Длительность:</span>
+                                <span class="font-medium block"><%= spell.duration %></span>
+                            </div>
+                        <% } %>
+                        <% if (spell.casting_time) { %>
+                            <div>
+                                <span class="text-gray-500">⏱️ Время:</span>
+                                <span class="font-medium block"><%= spell.casting_time %></span>
+                            </div>
+                        <% } %>
+                    </div>
+                    
+                    <!-- Описание -->
+                    <div class="text-gray-700 leading-relaxed">
+                        <%- (spell.description || '').replace(/\n/g, '<br>') %>
+                    </div>
+                    
+                    <!-- На каких уровнях повышается -->
+                    <% if (spell.higher_levels) { %>
+                        <div class="mt-3 pt-3 border-t text-sm">
+                            <span class="text-purple-600 font-medium">⭐ На более высоких уровнях:</span>
+                            <span class="text-gray-600"><%= spell.higher_levels %></span>
+                        </div>
+                    <% } %>
+                </div>
+            <% }) %>
+        </div>
+    <% } else if (query || level || school || selectedClass || archetype) { %>
+        <div class="bg-white rounded-lg shadow p-12 text-center text-gray-500">
+            <p class="text-lg">😕 Ничего не найдено</p>
+            <p class="text-sm mt-2">Попробуйте изменить параметры поиска</p>
+            <a href="/search" class="inline-block mt-4 text-purple-600 hover:underline">Сбросить фильтры</a>
+        </div>
+    <% } else { %>
+        <div class="bg-white rounded-lg shadow p-12 text-center text-gray-500">
+            <p class="text-lg">🔍 Введите название заклинания или выберите фильтры для поиска</p>
+        </div>
+    <% } %>
+</div>
+
+<script>
+    // Динамическая фильтрация архетипов в зависимости от выбранного класса
+    const classSelect = document.getElementById('classFilter');
+    const archetypeSelect = document.getElementById('archetypeFilter');
+    
+    if (classSelect && archetypeSelect) {
+        // Сохраняем все опции архетипов
+        const allArchetypeOptions = Array.from(archetypeSelect.options);
+        
+        function updateArchetypes() {
+            const selectedClass = classSelect.value;
+            
+            // Показываем/скрываем архетипы в зависимости от класса
+            for (let i = 0; i < archetypeSelect.options.length; i++) {
+                const option = archetypeSelect.options[i];
+                const optionClass = option.getAttribute('data-class');
+                
+                if (option.value === '') {
+                    option.style.display = '';
+                    continue;
+                }
+                
+                if (!selectedClass || optionClass === selectedClass) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+            
+            // Если выбранный архетип скрыт - сбрасываем его
+            const selectedOption = archetypeSelect.options[archetypeSelect.selectedIndex];
+            if (selectedOption && selectedOption.style.display === 'none') {
+                archetypeSelect.value = '';
+            }
+        }
+        
+        classSelect.addEventListener('change', updateArchetypes);
+        updateArchetypes();
+    }
+</script>
+
+<%- include('../partials/footer') %>

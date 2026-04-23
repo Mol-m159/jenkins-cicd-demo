@@ -1,0 +1,89 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="bg-white rounded-lg shadow">
+    <div class="p-6 border-b flex justify-between items-center flex-wrap gap-4">
+        <h1 class="text-2xl font-bold">⚔️ Библиотека способностей</h1>
+        <a href="/manage/abilities/new" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            + Новая способность
+        </a>
+    </div>
+    
+    <!-- Поиск -->
+    <div class="p-6 border-b bg-gray-50">
+        <form method="get" action="/manage/abilities" class="flex gap-4">
+            <div class="flex-1">
+                <input type="text" name="search" value="<%= search %>" 
+                       placeholder="Поиск способностей по названию..."
+                       class="w-full border rounded px-3 py-2">
+            </div>
+            <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                🔍 Найти
+            </button>
+            <% if (search) { %>
+                <a href="/manage/abilities" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">
+                    Сбросить
+                </a>
+            <% } %>
+        </form>
+    </div>
+    
+    <div class="p-6">
+        <div class="mb-2 text-sm text-gray-500">
+            Найдено способностей: <%= abilities.length %>
+        </div>
+        
+        <div class="space-y-4">
+            <% abilities.forEach(ability => { %>
+                <div class="border rounded-lg p-4 hover:shadow-md transition">
+                    <div class="flex justify-between items-start flex-wrap gap-4">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-purple-700"><%= ability.name %></h3>
+                            <div class="text-gray-700 mt-2"><%- (ability.description || '').replace(/\r\n/g, '<br>') %></div>
+                            
+                            <% if (ability.classes && ability.classes.length > 0) { %>
+                                <div class="mt-2 flex flex-wrap gap-1">
+                                    <span class="text-xs text-gray-500">Классы:</span>
+                                    <% ability.classes.forEach(cls => { %>
+                                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                                            <%= cls.class %> (ур. <%= cls.level %>)
+                                        </span>
+                                    <% }) %>
+                                </div>
+                            <% } %>
+                            
+                            <% if (ability.archetypes && ability.archetypes.length > 0) { %>
+                                <div class="mt-1 flex flex-wrap gap-1">
+                                    <span class="text-xs text-gray-500">Архетипы:</span>
+                                    <% ability.archetypes.forEach(arch => { %>
+                                        <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                                            <%= arch.archetype %> (ур. <%= arch.level %>)
+                                        </span>
+                                    <% }) %>
+                                </div>
+                            <% } %>
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="/manage/abilities/edit/<%= encodeURIComponent(ability.name) %>" 
+                               class="text-yellow-600 hover:text-yellow-800 px-2 py-1">✏️</a>
+                            <form method="post" action="/manage/abilities/delete/<%= encodeURIComponent(ability.name) %>" 
+                                  class="inline" onsubmit="return confirm('Удалить способность?')">
+                                <button type="submit" class="text-red-600 hover:text-red-800 px-2 py-1">🗑️</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+        
+        <% if (abilities.length === 0) { %>
+            <div class="text-center py-12 text-gray-500">
+                <p>Способности не найдены</p>
+                <a href="/manage/abilities/new" class="text-purple-600 hover:underline mt-2 inline-block">
+                    Создать первую способность →
+                </a>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

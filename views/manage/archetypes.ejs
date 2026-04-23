@@ -1,0 +1,99 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="bg-white rounded-lg shadow">
+    <div class="p-6 border-b flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <h1 class="text-2xl font-bold">🎭 Архетипы класса</h1>
+            <p class="text-gray-600 mt-1">
+                <a href="/manage/classes" class="text-purple-600 hover:underline">← Назад к классам</a>
+                / <strong><%= className %></strong>
+            </p>
+        </div>
+        <button onclick="document.getElementById('newArchetypeModal').showModal()" 
+                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            + Новый архетип
+        </button>
+    </div>
+    
+    <div class="p-6">
+        <div class="grid gap-4">
+            <% archetypes.forEach(arch => { %>
+                <div class="border rounded-lg p-4 hover:shadow-md transition">
+                    <div class="flex justify-between items-start flex-wrap gap-4">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-purple-700"><%= arch.name %></h3>
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="/manage/archetype-abilities/<%= encodeURIComponent(className) %>/<%= encodeURIComponent(arch.name) %>"
+                               class="text-green-600 hover:text-green-800 px-2 py-1">⚔️ Умения</a>
+                            <button onclick="editArchetype('<%= arch.name.replace(/'/g, "\\'") %>')" 
+                                    class="text-yellow-600 hover:text-yellow-800 px-2 py-1">✏️</button>
+                            <form method="post" action="/manage/archetypes/delete" 
+                                  class="inline" onsubmit="return confirm('Удалить архетип?')">
+                                <input type="hidden" name="class_name" value="<%= className %>">
+                                <input type="hidden" name="name" value="<%= arch.name %>">
+                                <button type="submit" class="text-red-600 hover:text-red-800 px-2 py-1">🗑️</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+        
+        <% if (archetypes.length === 0) { %>
+            <div class="text-center py-12 text-gray-500">
+                <p>Нет архетипов для этого класса</p>
+                <p class="text-sm mt-2">Создайте первый архетип</p>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Модальное окно создания архетипа -->
+<dialog id="newArchetypeModal" class="rounded-lg shadow-xl p-0 w-full max-w-md">
+    <div class="p-6">
+        <h2 class="text-xl font-bold mb-4">Новый архетип</h2>
+        <form method="post" action="/manage/archetypes/new">
+            <input type="hidden" name="class_name" value="<%= className %>">
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">Название *</label>
+                <input type="text" name="name" required class="w-full border rounded px-3 py-2">
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="document.getElementById('newArchetypeModal').close()" 
+                        class="bg-gray-300 px-4 py-2 rounded">Отмена</button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Создать</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+
+<!-- Модальное окно редактирования архетипа -->
+<dialog id="editArchetypeModal" class="rounded-lg shadow-xl p-0 w-full max-w-md">
+    <div class="p-6">
+        <h2 class="text-xl font-bold mb-4">Редактирование архетипа</h2>
+        <form method="post" action="/manage/archetypes/edit">
+            <input type="hidden" name="class_name" value="<%= className %>">
+            <input type="hidden" name="old_name" id="edit_old_name">
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">Название *</label>
+                <input type="text" name="name" id="edit_name" required class="w-full border rounded px-3 py-2">
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="document.getElementById('editArchetypeModal').close()" 
+                        class="bg-gray-300 px-4 py-2 rounded">Отмена</button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+
+<script>
+    function editArchetype(name) {
+        document.getElementById('edit_old_name').value = name;
+        document.getElementById('edit_name').value = name;
+        document.getElementById('editArchetypeModal').showModal();
+    }
+</script>
+
+<%- include('../partials/footer') %>

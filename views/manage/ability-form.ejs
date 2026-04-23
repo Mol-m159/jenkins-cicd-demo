@@ -1,0 +1,32 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+    <h1 class="text-2xl font-bold mb-6"><%= isEdit ? '✏️ Редактирование способности' : '✨ Новая способность' %></h1>
+    
+    <form method="post" action="<%= isEdit ? `/manage/abilities/update/${encodeURIComponent(ability.name)}` : '/manage/abilities' %>">
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Название *</label>
+            <input type="text" name="name" value="<%= ability?.name || '' %>" required
+                   class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600">
+            <p class="text-xs text-gray-500 mt-1">Уникальное название способности</p>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Описание</label>
+            <textarea name="description" rows="8" class="w-full border rounded px-3 py-2 font-mono text-sm"
+                      placeholder="Опишите действие способности...&#10;Поддерживается HTML разметка (br, strong, em и т.д.)"><%= ability?.description || '' %></textarea>
+            <p class="text-xs text-gray-500 mt-1">Поддерживается HTML. Для переноса строки используйте &lt;br&gt;</p>
+        </div>
+        
+        <div class="flex gap-3">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+                <%= isEdit ? 'Сохранить изменения' : 'Создать способность' %>
+            </button>
+            <a href="/manage/abilities" class="bg-gray-300 px-6 py-2 rounded hover:bg-gray-400 transition">
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>

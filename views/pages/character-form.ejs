@@ -1,0 +1,187 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+    <h1 class="text-2xl font-bold mb-6"><%= isEdit ? '✏️ Редактирование персонажа' : '✨ Создание персонажа' %></h1>
+    
+    <% if (isEdit) { %>
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <p class="text-sm text-yellow-700">
+                ⚠️ <strong>Внимание:</strong> При изменении имени персонажа будет создан новый персонаж, 
+                а старый будет удален. Все заклинания, воззвания и предметы будут перенесены.
+            </p>
+        </div>
+    <% } %>
+    
+    <form method="post" action="<%= isEdit ? `/lc/character_changePost/${user}/${camp_id}/${encodeURIComponent(character.name)}` : `/lc/newcharacter/form/${user}` %>">
+        <!-- Имя -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Имя персонажа *</label>
+            <input type="text" name="name" value="<%= character?.name || '' %>" required
+                   class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600">
+        </div>
+        
+        <!-- Кампания -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Кампания</label>
+            <select name="campaign_id" class="w-full border rounded px-3 py-2">
+                <option value="">— Без кампании (личная) —</option>
+                <% if (campaigns && campaigns.length > 0) { %>
+                    <% campaigns.forEach(camp => { 
+                        const isSelected = isEdit ? (character?.campaign_id == camp.campaign_id) : false;
+                    %>
+                        <option value="<%= camp.campaign_id %>" <%= isSelected ? 'selected' : '' %>>
+                            <%= camp.name %> 
+                            <% if (camp.master === user) { %>
+                                (мастер: вы)
+                            <% } else if (camp.master === null) { %>
+                                (личная)
+                            <% } else if (camp.master) { %>
+                                (мастер: <%= camp.master %>)
+                            <% } %>
+                        </option>
+                    <% }) %>
+                <% } %>
+            </select>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <!-- Класс -->
+            <div>
+                <label class="block text-gray-700 mb-2">Класс *</label>
+                <select name="class_ch" required class="w-full border rounded px-3 py-2" id="classSelect">
+                    <% classes.forEach(cls => { %>
+                        <option value="<%= cls.class_name %>" 
+                                <%= character?.class === cls.class_name ? 'selected' : '' %>>
+                            <%= cls.class_name %>
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+            
+            <!-- Архетип -->
+            <div>
+                <label class="block text-gray-700 mb-2">Архетип</label>
+                <select name="archetype" id="archetypeSelect" class="w-full border rounded px-3 py-2">
+                    <option value="">— Без архетипа —</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Уровень -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Уровень</label>
+            <input type="number" name="level" min="1" max="20" value="<%= character?.level || 1 %>"
+                   class="w-full border rounded px-3 py-2">
+        </div>
+        
+        <!-- Характеристики -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2 font-bold">Характеристики</label>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-sm text-gray-600">Сила</label>
+                    <input type="number" name="strength" min="1" max="30" value="<%= character?.strength || 10 %>"
+                           class="w-full border rounded px-2 py-1">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600">Ловкость</label>
+                    <input type="number" name="dexterity" min="1" max="30" value="<%= character?.dexterity || 10 %>"
+                           class="w-full border rounded px-2 py-1">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600">Выносливость</label>
+                    <input type="number" name="constitution" min="1" max="30" value="<%= character?.constitution || 10 %>"
+                           class="w-full border rounded px-2 py-1">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600">Интеллект</label>
+                    <input type="number" name="intelligence" min="1" max="30" value="<%= character?.intelligence || 10 %>"
+                           class="w-full border rounded px-2 py-1">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600">Мудрость</label>
+                    <input type="number" name="wisdom" min="1" max="30" value="<%= character?.wisdom || 10 %>"
+                           class="w-full border rounded px-2 py-1">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600">Харизма</label>
+                    <input type="number" name="charism" min="1" max="30" value="<%= character?.charism || 10 %>"
+                           class="w-full border rounded px-2 py-1">
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex gap-3">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+                <%= isEdit ? 'Сохранить изменения' : 'Создать' %>
+            </button>
+            <a href="/lc/<%= user %>" class="bg-gray-300 px-6 py-2 rounded hover:bg-gray-400 transition">
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+<div id="archetypes-data" 
+     data-archetypes='<%- JSON.stringify(archetypes || []) %>' 
+     data-current-archetype="<%= character ? character.archetype || '' : '' %>"
+     style="display: none;">
+</div>
+
+<script>
+    // Получаем данные из HTML-элемента
+    const archetypesDataElement = document.getElementById('archetypes-data');
+    let archetypesData = [];
+    
+    if (archetypesDataElement) {
+        try {
+            const archetypesJson = archetypesDataElement.getAttribute('data-archetypes');
+            archetypesData = JSON.parse(archetypesJson) || [];
+        } catch(e) {
+            console.error('Ошибка парсинга архетипов:', e);
+            archetypesData = [];
+        }
+    }
+    
+    function updateArchetypes() {
+        const currentCharacterClass = '<%= character?.class || "" %>';
+        const currentCharacterArchetype = '<%= character?.archetype || "" %>';
+    
+        const classSelect = document.getElementById('classSelect');
+        const archetypeSelect = document.getElementById('archetypeSelect');
+        
+        if (!classSelect || !archetypeSelect) return;
+        
+        const selectedClass = classSelect.value;
+        
+        // Очищаем и добавляем опцию по умолчанию
+        archetypeSelect.innerHTML = '<option value="">— Без архетипа —</option>';
+        
+        // Фильтруем архетипы по выбранному классу
+        const filteredArchetypes = archetypesData.filter(a => a.class === selectedClass);
+        
+        filteredArchetypes.forEach(archetype => {
+            const option = document.createElement('option');
+            option.value = archetype.name;
+            option.textContent = archetype.name;
+            // Проверяем, совпадает ли с текущим архетипом персонажа
+            if (currentCharacterArchetype === archetype.name && currentCharacterClass === selectedClass) {
+                option.selected = true;
+            }
+            archetypeSelect.appendChild(option);
+        });
+        
+    }
+    
+    // Ждем полной загрузки DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        const classSelect = document.getElementById('classSelect');
+        if (classSelect) {
+            // Запускаем обновление сразу
+            updateArchetypes();
+            // Вешаем обработчик на изменение
+            classSelect.addEventListener('change', updateArchetypes);
+        }
+    });
+</script>
+
+<%- include('../partials/footer') %>

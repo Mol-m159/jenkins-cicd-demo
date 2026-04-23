@@ -1,0 +1,82 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+    <h1 class="text-2xl font-bold mb-6"><%= isEdit ? '✏️ Редактирование предмета' : '✨ Новый предмет' %></h1>
+    
+    <form method="post" action="<%= isEdit ? `/manage/items/update/${encodeURIComponent(item.name)}` : '/manage/items' %>">
+        <!-- Название -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Название *</label>
+            <input type="text" name="name" value="<%= item?.name || '' %>" required
+                   class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600">
+            <p class="text-xs text-gray-500 mt-1">Уникальное название предмета</p>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <!-- Тип -->
+            <div>
+                <label class="block text-gray-700 mb-2">Тип</label>
+                <select name="type" class="w-full border rounded px-3 py-2">
+                    <% types.forEach(t => { %>
+                        <option value="<%= t %>" <%= item?.type === t ? 'selected' : '' %>><%= t %></option>
+                    <% }) %>
+                </select>
+            </div>
+            
+            <!-- Редкость -->
+            <div>
+                <label class="block text-gray-700 mb-2">Редкость</label>
+                <select name="rarity" class="w-full border rounded px-3 py-2">
+                    <% rarities.forEach(r => { %>
+                        <option value="<%= r %>" <%= item?.rarity === r ? 'selected' : '' %>><%= r %></option>
+                    <% }) %>
+                </select>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <!-- Вес -->
+            <div>
+                <label class="block text-gray-700 mb-2">Вес (фунты)</label>
+                <input type="number" name="weight" step="0.1" min="0" value="<%= item?.weight || 0 %>"
+                       class="w-full border rounded px-3 py-2">
+                <p class="text-xs text-gray-500 mt-1">0 - невесомый предмет</p>
+            </div>
+            
+            <!-- Стоимость -->
+            <div>
+                <label class="block text-gray-700 mb-2">Стоимость</label>
+                <input type="text" name="cost" value="<%= item?.cost || '' %>" placeholder="например: 50 зм, 100 гм"
+                       class="w-full border rounded px-3 py-2">
+            </div>
+        </div>
+        
+        <!-- Аттунмент -->
+        <div class="mb-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="attunement" <%= item?.attunement ? 'checked' : '' %> class="w-4 h-4">
+                <span class="text-gray-700">Требует настройки</span>
+            </label>
+            <p class="text-xs text-gray-500 mt-1">Некоторые магические предметы требуют настройки</p>
+        </div>
+        
+        <!-- Описание -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Описание</label>
+            <textarea name="description" rows="6" class="w-full border rounded px-3 py-2" 
+                      placeholder="Опишите предмет, его свойства и особенности..."><%= item?.description || '' %></textarea>
+            <p class="text-xs text-gray-500 mt-1">Поддерживается HTML разметка (теги &lt;br&gt;, &lt;strong&gt; и т.д.)</p>
+        </div>
+        
+        <div class="flex gap-3">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+                <%= isEdit ? 'Сохранить изменения' : 'Создать предмет' %>
+            </button>
+            <a href="/manage/items" class="bg-gray-300 px-6 py-2 rounded hover:bg-gray-400 transition">
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>

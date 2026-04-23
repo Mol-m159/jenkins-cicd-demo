@@ -1,0 +1,95 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="grid lg:grid-cols-2 gap-8">
+    <!-- ПЕРСОНАЖИ -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <h2 class="text-2xl font-bold text-gray-800">📖 Мои персонажи</h2>
+            <a href="/lc/newcharacter/<%= user %>" 
+               class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
+                + Создать персонажа
+            </a>
+        </div>
+        
+        <% if (characters && characters.length > 0) { %>
+            <div class="space-y-3 max-h-[600px] overflow-y-auto">
+                <% characters.forEach(char => { %>
+                    <div class="border rounded-lg p-4 hover:shadow-md transition">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <a href="/lc/<%= user %>/<%= char.campaign_id || 'null' %>/<%= encodeURIComponent(char.name) %>" 
+                                   class="text-lg font-semibold text-blue-600 hover:underline">
+                                    <%= char.name %>
+                                </a>
+                                <div class="text-sm text-gray-600 mt-1">
+                                    <span class="bg-purple-100 px-2 py-0.5 rounded"><%= char.class %></span>
+                                    уровень <%= char.level %>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    <%= char.campaign_name ? `🏰 ${char.campaign_name}` : '📝 Без кампании' %>
+                                </div>
+                            </div>
+                            <a href="/lc/delete/<%= user %>/<%= char.campaign_id || 'null' %>/<%= encodeURIComponent(char.name) %>"
+                               onclick="return confirm('Удалить персонажа <%= char.name %>?')"
+                               class="text-red-600 hover:text-red-800 text-sm">
+                                🗑️
+                            </a>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } else { %>
+            <div class="text-center py-8 text-gray-500">
+                <p>У вас пока нет персонажей</p>
+                <a href="/lc/newcharacter/<%= user %>" class="text-blue-600 hover:underline mt-2 inline-block">
+                    Создать первого персонажа →
+                </a>
+            </div>
+        <% } %>
+    </div>
+    
+    <!-- КАМПАНИИ -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <h2 class="text-2xl font-bold text-gray-800">🏰 Мои кампании</h2>
+            <form method="post" action="/lc/newcampaign/<%= user %>" class="flex gap-2">
+                <input type="text" name="name" placeholder="Название кампании" required
+                       class="border rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
+                <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                    Создать
+                </button>
+            </form>
+        </div>
+        
+        <% if (campaigns && campaigns.length > 0) { %>
+            <div class="space-y-3">
+                <% campaigns.forEach(camp => { %>
+                    <div class="border rounded-lg p-4 hover:shadow-md transition">
+                        <div class="flex justify-between items-center">
+                            <a href="/lc/campaign/<%= user %>/<%= camp.campaign_id %>" 
+                               class="text-lg font-semibold text-blue-600 hover:underline">
+                                <%= camp.name %>
+                            </a>
+                            <form method="post" action="/lc/delcampaign/<%= camp.campaign_id %>"
+                                  onsubmit="return confirm('Удалить кампанию <%= camp.name %>? Все персонажи в ней тоже удалятся!')">
+                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
+                                    🗑️
+                                </button>
+                            </form>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            ID: <%= camp.campaign_id %>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } else { %>
+            <div class="text-center py-8 text-gray-500">
+                <p>У вас пока нет кампаний</p>
+                <p class="text-sm mt-2">Создайте кампанию, чтобы собрать игроков</p>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,347 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h1 class="text-2xl font-bold mb-2">🔗 Привязка заклинаний</h1>
+        <p class="text-gray-600 mb-4">Определите, какие заклинания доступны каким классам и архетипам</p>
+    </div>
+    
+    <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Привязка к классам -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b bg-gray-50">
+                <h2 class="text-xl font-bold">📚 Привязка к классам</h2>
+            </div>
+            
+            <!-- Форма добавления -->
+            <div class="p-4 border-b">
+                <form method="post" action="/manage/spell-links/add-class" class="grid gap-3">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Заклинание</label>
+                        <select name="spell" required class="w-full border rounded px-3 py-2 spell-search" data-placeholder="Поиск заклинания...">
+                            <option value="">Выберите заклинание</option>
+                            <% if (spells && Array.isArray(spells) && spells.length) { %>
+                                <% spells.sort(function(a, b) { 
+                                    return a.level - b.level || a.name.localeCompare(b.name);
+                                }); %>
+                                <% spells.forEach(function(spell) { %>
+                                    <option value="<%= spell.name %>" data-level="<%= spell.level %>">
+                                        [<%= spell.level %>] <%= spell.name %>
+                                    </option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Класс</label>
+                        <select name="class_name" required class="w-full border rounded px-3 py-2 class-search" data-placeholder="Поиск класса...">
+                            <option value="">Выберите класс</option>
+                            <% if (classes && Array.isArray(classes) && classes.length) { %>
+                                <% classes.sort(function(a, b) { 
+                                    return a.class_name.localeCompare(b.class_name);
+                                }); %>
+                                <% classes.forEach(function(cls) { %>
+                                    <option value="<%= cls.class_name %>"><%= cls.class_name %></option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+                    <button type="submit" class="bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                        + Добавить привязку
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Фильтр и список существующих привязок -->
+            <div class="p-4">
+                <h3 class="font-semibold mb-3">Существующие привязки</h3>
+                
+                <!-- Фильтры -->
+                <div class="mb-4 grid gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Фильтр по классу</label>
+                        <select id="filterClass" class="w-full border rounded px-2 py-1 text-sm">
+                            <option value="">Все классы</option>
+                            <% if (classes && Array.isArray(classes) && classes.length) { %>
+                                <% classes.forEach(function(cls) { %>
+                                    <option value="<%= cls.class_name %>"><%= cls.class_name %></option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Фильтр по заклинанию</label>
+                        <input type="text" id="filterSpellClass" placeholder="Поиск по названию..." 
+                               class="w-full border rounded px-2 py-1 text-sm">
+                    </div>
+                </div>
+                
+                <div id="classLinksList">
+                    <% if (spellClasses && Array.isArray(spellClasses) && spellClasses.length) { %>
+                        <div class="space-y-2">
+                            <% spellClasses.forEach(function(item) { %>
+                                <div class="class-link-item flex justify-between items-center p-2 bg-gray-50 rounded" 
+                                     data-class="<%= item.class %>" 
+                                     data-spell="<%= item.spell %>">
+                                    <div>
+                                        <span class="font-medium"><%= item.spell %></span>
+                                        <span class="text-gray-500 mx-2">→</span>
+                                        <span class="text-purple-700"><%= item.class %></span>
+                                        <span class="text-xs text-gray-400 ml-2">(ур. <%= item.spell_level %>)</span>
+                                    </div>
+                                    <form method="post" action="/manage/spell-links/remove-class" 
+                                          onsubmit="return confirm('Удалить привязку?')">
+                                        <input type="hidden" name="spell" value="<%= item.spell %>">
+                                        <input type="hidden" name="class_name" value="<%= item.class %>">
+                                        <button type="submit" class="text-red-600 hover:text-red-800">🗑️</button>
+                                    </form>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } else { %>
+                        <p class="text-gray-500 text-center py-4">Нет привязок</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Привязка к архетипам -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b bg-gray-50">
+                <h2 class="text-xl font-bold">🎭 Привязка к архетипам</h2>
+            </div>
+            
+            <!-- Форма добавления -->
+            <div class="p-4 border-b">
+                <form method="post" action="/manage/spell-links/add-archetype" class="grid gap-3">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Заклинание</label>
+                        <select name="spell" required class="w-full border rounded px-3 py-2 spell-search2" data-placeholder="Поиск заклинания...">
+                            <option value="">Выберите заклинание</option>
+                            <% if (spells && Array.isArray(spells) && spells.length) { %>
+                                <% spells.forEach(function(spell) { %>
+                                    <option value="<%= spell.name %>" data-level="<%= spell.level %>">
+                                        [<%= spell.level %>] <%= spell.name %>
+                                    </option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Архетип</label>
+                        <select name="archetype" required class="w-full border rounded px-3 py-2 archetype-search" data-placeholder="Поиск архетипа...">
+                            <option value="">Выберите архетип</option>
+                            <% if (archetypes && Array.isArray(archetypes) && archetypes.length) { %>
+                                <% archetypes.sort(function(a, b) { 
+                                    return a.class.localeCompare(b.class) || a.name.localeCompare(b.name);
+                                }); %>
+                                <% archetypes.forEach(function(arch) { %>
+                                    <option value="<%= arch.name %>" data-class="<%= arch.class %>">
+                                        <%= arch.class %> → <%= arch.name %>
+                                    </option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+                    <button type="submit" class="bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                        + Добавить привязку
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Фильтр и список существующих привязок -->
+            <div class="p-4">
+                <h3 class="font-semibold mb-3">Существующие привязки</h3>
+                
+                <!-- Фильтры -->
+                <div class="mb-4 grid gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Фильтр по архетипу</label>
+                        <input type="text" id="filterArchetypeName" placeholder="Поиск по названию..." 
+                               class="w-full border rounded px-2 py-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Фильтр по заклинанию</label>
+                        <input type="text" id="filterSpellArchetype" placeholder="Поиск по названию..." 
+                               class="w-full border rounded px-2 py-1 text-sm">
+                    </div>
+                </div>
+                
+                <div id="archetypeLinksList">
+                    <% if (spellArchetypes && Array.isArray(spellArchetypes) && spellArchetypes.length) { %>
+                        <div class="space-y-2">
+                            <% spellArchetypes.forEach(function(item) { %>
+                                <div class="archetype-link-item flex justify-between items-center p-2 bg-gray-50 rounded" 
+                                     data-archetype="<%= item.archetype %>" 
+                                     data-spell="<%= item.spell %>">
+                                    <div>
+                                        <span class="font-medium"><%= item.spell %></span>
+                                        <span class="text-gray-500 mx-2">→</span>
+                                        <span class="text-purple-700"><%= item.archetype %></span>
+                                        <span class="text-xs text-gray-400 ml-2">
+                                            (<%= item.class %>, ур. <%= item.spell_level %>)
+                                        </span>
+                                    </div>
+                                    <form method="post" action="/manage/spell-links/remove-archetype" 
+                                          onsubmit="return confirm('Удалить привязку?')">
+                                        <input type="hidden" name="spell" value="<%= item.spell %>">
+                                        <input type="hidden" name="archetype" value="<%= item.archetype %>">
+                                        <button type="submit" class="text-red-600 hover:text-red-800">🗑️</button>
+                                    </form>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } else { %>
+                        <p class="text-gray-500 text-center py-4">Нет привязок</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-6 text-center text-sm text-gray-500">
+        <p>💡 Привязки определяют, какие заклинания доступны персонажам при создании</p>
+    </div>
+</div>
+
+<!-- Подключаем Select2 для красивых поисковых выпадающих списков -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+    /* Стили для Select2 */
+    .select2-container--default .select2-selection--single {
+        height: 42px;
+        padding: 5px;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 30px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px;
+    }
+    .select2-dropdown {
+        border-color: #d1d5db;
+    }
+    .select2-search__field {
+        border-radius: 0.375rem !important;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        // Инициализация Select2 для поиска заклинаний и классов
+        $('.spell-search, .spell-search2').select2({
+            width: '100%',
+            placeholder: 'Поиск заклинания...',
+            allowClear: true,
+            matcher: function(params, data) {
+                // Поиск по названию и уровню
+                if ($.trim(params.term) === '') {
+                    return data;
+                }
+                var term = params.term.toLowerCase();
+                var text = data.text.toLowerCase();
+                var level = $(data.element).data('level');
+                if (text.indexOf(term) > -1 || (level && level.toString().indexOf(term) > -1)) {
+                    return data;
+                }
+                return null;
+            }
+        });
+        
+        $('.class-search').select2({
+            width: '100%',
+            placeholder: 'Поиск класса...',
+            allowClear: true
+        });
+        
+        $('.archetype-search').select2({
+            width: '100%',
+            placeholder: 'Поиск архетипа...',
+            allowClear: true,
+            matcher: function(params, data) {
+                if ($.trim(params.term) === '') {
+                    return data;
+                }
+                var term = params.term.toLowerCase();
+                var text = data.text.toLowerCase();
+                var className = $(data.element).data('class');
+                if (text.indexOf(term) > -1 || (className && className.toLowerCase().indexOf(term) > -1)) {
+                    return data;
+                }
+                return null;
+            }
+        });
+        
+        // Фильтр для привязок классов
+        function filterClassLinks() {
+            var classFilter = $('#filterClass').val().toLowerCase();
+            var spellFilter = $('#filterSpellClass').val().toLowerCase();
+            
+            $('.class-link-item').each(function() {
+                var className = $(this).data('class').toLowerCase();
+                var spellName = $(this).data('spell').toLowerCase();
+                
+                var classMatch = !classFilter || className === classFilter;
+                var spellMatch = !spellFilter || spellName.indexOf(spellFilter) > -1;
+                
+                if (classMatch && spellMatch) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            
+            // Показываем сообщение, если ничего не найдено
+            var visible = $('.class-link-item:visible').length;
+            if (visible === 0 && $('.class-link-item').length > 0) {
+                if ($('#noResultsClass').length === 0) {
+                    $('#classLinksList .space-y-2').append('<p id="noResultsClass" class="text-gray-500 text-center py-4">Ничего не найдено</p>');
+                }
+            } else {
+                $('#noResultsClass').remove();
+            }
+        }
+        
+        // Фильтр для привязок архетипов
+        function filterArchetypeLinks() {
+            var archetypeFilter = $('#filterArchetypeName').val().toLowerCase();
+            var spellFilter = $('#filterSpellArchetype').val().toLowerCase();
+            
+            $('.archetype-link-item').each(function() {
+                var archetypeName = $(this).data('archetype').toLowerCase();
+                var spellName = $(this).data('spell').toLowerCase();
+                
+                var archetypeMatch = !archetypeFilter || archetypeName.indexOf(archetypeFilter) > -1;
+                var spellMatch = !spellFilter || spellName.indexOf(spellFilter) > -1;
+                
+                if (archetypeMatch && spellMatch) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            
+            var visible = $('.archetype-link-item:visible').length;
+            if (visible === 0 && $('.archetype-link-item').length > 0) {
+                if ($('#noResultsArchetype').length === 0) {
+                    $('#archetypeLinksList .space-y-2').append('<p id="noResultsArchetype" class="text-gray-500 text-center py-4">Ничего не найдено</p>');
+                }
+            } else {
+                $('#noResultsArchetype').remove();
+            }
+        }
+        
+        // Навешиваем обработчики на фильтры
+        $('#filterClass').on('change', filterClassLinks);
+        $('#filterSpellClass').on('input', filterClassLinks);
+        $('#filterArchetypeName').on('input', filterArchetypeLinks);
+        $('#filterSpellArchetype').on('input', filterArchetypeLinks);
+    });
+</script>
+
+<%- include('../partials/footer') %>

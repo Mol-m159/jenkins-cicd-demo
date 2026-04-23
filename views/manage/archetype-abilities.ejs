@@ -1,0 +1,182 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="bg-white rounded-lg shadow">
+    <div class="p-6 border-b flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <h1 class="text-2xl font-bold">⚔️ Умения архетипа</h1>
+            <p class="text-gray-600 mt-1">
+                <a href="/manage/classes" class="text-purple-600 hover:underline">← Назад к классам</a>
+                / <a href="/manage/archetypes/<%= encodeURIComponent(className) %>" class="text-purple-600 hover:underline">Архетипы <%= className %></a>
+                / <strong><%= archetypeName %></strong>
+            </p>
+        </div>
+        <button onclick="document.getElementById('newAbilityModal').showModal()"
+                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            + Добавить умение
+        </button>
+    </div>
+
+    <div class="p-6">
+        <div class="space-y-3">
+            <% const levels = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; %>
+            <% let hasAbilities = false; %>
+            <% levels.forEach(level => { 
+                const levelAbilities = abilities.filter(a => a.level == level);
+                if (levelAbilities.length > 0) {
+                    hasAbilities = true;
+            %>
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold border-b pb-2 mb-3">Уровень <%= level %></h3>
+                    <div class="space-y-2">
+                        <% levelAbilities.forEach(ability => { %>
+                            <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                <div class="flex-1">
+                                    <span class="font-medium"><%= ability.name %></span>
+                                    <div class="text-sm text-gray-600 mt-1"><%= (ability.description || '').substring(0, 100) %>...</div>
+                                </div>
+                                <form method="post" action="/manage/archetype-abilities/remove" class="inline" onsubmit="return confirm('Удалить умение?')">
+                                    <input type="hidden" name="class_name" value="<%= className %>">
+                                    <input type="hidden" name="archetype" value="<%= archetypeName %>">
+                                    <input type="hidden" name="ability" value="<%= ability.name %>">
+                                    <button type="submit" class="text-red-600 hover:text-red-800 px-2 py-1">🗑️</button>
+                                </form>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            <% } %>
+            <% }) %>
+
+            <% if (!hasAbilities) { %>
+                <div class="text-center py-12 text-gray-500">
+                    <p>Нет умений для этого архетипа</p>
+                    <p class="text-sm mt-2">Добавьте умения через форму ниже</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления умения -->
+<dialog id="newAbilityModal" class="rounded-lg shadow-xl p-0 w-full max-w-lg">
+    <div class="p-6">
+        <h2 class="text-xl font-bold mb-4">Добавить умение архетипу <%= archetypeName %></h2>
+
+        <!-- Форма создания новой способности -->
+        <form id="createAbilityForm">
+            <div class="mb-3">
+                <label class="block text-gray-700 mb-2">Название способности *</label>
+                <input type="text" name="name" id="newName" placeholder="Например: Боевая магия" 
+                       class="w-full border rounded px-3 py-2" required>
+                <p class="text-xs text-gray-500 mt-1">Уникальное название. Если способность уже существует, вы увидите предупреждение</p>
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-gray-700 mb-2">Уровень получения *</label>
+                <input type="number" name="level" id="newLevel" min="1" max="20" value="1" 
+                       class="w-full border rounded px-3 py-2" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-gray-700 mb-2">Описание</label>
+                <textarea name="description" id="newDesc" rows="5" placeholder="Опишите действие способности..." 
+                          class="w-full border rounded px-3 py-2"></textarea>
+                <p class="text-xs text-gray-500 mt-1">Поддерживается HTML (br, strong, em)</p>
+            </div>
+            
+            <div class="flex gap-3 justify-end mt-4">
+                <button type="button" onclick="document.getElementById('newAbilityModal').close()" 
+                        class="bg-gray-300 px-4 py-2 rounded">Отмена</button>
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Создать и добавить
+                </button>
+            </div>
+        </form>
+    </div>
+</dialog>
+
+<script>
+    const className = '<%= className %>';
+    const archetypeName = '<%= archetypeName %>';
+    const modal = document.getElementById('newAbilityModal');
+    const createForm = document.getElementById('createAbilityForm');
+    
+    // Функция проверки существования способности
+    async function checkAbilityExists(name) {
+        try {
+            const response = await fetch(`/manage/abilities/check/${encodeURIComponent(name)}`);
+            const data = await response.json();
+            return data.exists;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+    }
+    
+    // Создание и добавление способности к архетипу
+    createForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('newName').value.trim();
+        const level = document.getElementById('newLevel').value;
+        const description = document.getElementById('newDesc').value;
+        
+        if (!name) {
+            alert('Введите название способности');
+            return;
+        }
+        
+        // Проверяем, существует ли уже такая способность
+        const exists = await checkAbilityExists(name);
+        
+        if (exists) {
+            alert(`Способность "${name}" уже существует в библиотеке!\n\nИспользуйте существующую способность или придумайте другое название.`);
+            return;
+        }
+        
+        try {
+            // Создаем способность
+            const createResponse = await fetch('/manage/abilities', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ name, description })
+            });
+            
+            if (!createResponse.ok) {
+                const error = await createResponse.text();
+                alert('Ошибка при создании: ' + error);
+                return;
+            }
+            
+            // Добавляем к архетипу
+            const addResponse = await fetch('/manage/archetype-abilities/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    class_name: className,
+                    archetype: archetypeName,
+                    ability: name,
+                    level: level
+                })
+            });
+            
+            if (addResponse.ok) {
+                window.location.reload();
+            } else {
+                const error = await addResponse.text();
+                alert('Ошибка при добавлении к архетипу: ' + error);
+            }
+        } catch (error) {
+            alert('Ошибка: ' + error.message);
+        }
+    });
+    
+    // Сброс полей при закрытии
+    modal.addEventListener('close', function() {
+        document.getElementById('newName').value = '';
+        document.getElementById('newLevel').value = '1';
+        document.getElementById('newDesc').value = '';
+    });
+</script>
+
+<%- include('../partials/footer') %>

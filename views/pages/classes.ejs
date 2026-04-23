@@ -1,0 +1,26 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="bg-white rounded-lg shadow p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">🎭 Классы D&D</h1>
+    
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <% for (var i = 0; i < classes.length; i++) { %>
+            <% var cls = classes[i]; %>
+            <a href="/classes/<%= encodeURIComponent(cls.class_name) %>" 
+               class="block border rounded-lg p-4 hover:shadow-lg transition hover:border-purple-300">
+                <h2 class="text-xl font-bold text-purple-700"><%= cls.class_name %></h2>
+                <div class="text-sm text-gray-500 mt-2 flex gap-3">
+                    <span>📚 Архетипов: <%= cls.archetype_count || 0 %></span>
+                    <span>⚔️ Умений: <%= cls.ability_count || 0 %></span>
+                    <span>✨ Заклинаний: <%= cls.spell_count || 0 %></span>
+                </div>
+            </a>
+        <% } %>
+    </div>
+    
+    <% if (classes.length === 0) { %>
+        <p class="text-center text-gray-500 py-8">Классы не добавлены</p>
+    <% } %>
+</div>
+
+<%- include('../partials/footer') %>

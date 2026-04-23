@@ -1,0 +1,459 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex justify-between items-start flex-wrap gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">🎒 Инвентарь</h1>
+            <p class="text-gray-600 mt-1">
+                <a href="/lc/<%= user %>/<%= camp_id %>/<%= encodeURIComponent(character.name) %>" class="text-purple-600 hover:underline">
+                    <%= character.name %>
+                </a> 
+                (<%= character.class %> <%= character.level %> уровень)
+            </p>
+        </div>
+        <div class="text-right">
+            <div class="text-sm text-gray-500">Общий вес</div>
+            <div class="text-xl font-bold"><%= totalWeight %> / <%= character.strength * 15 %> фунтов</div>
+            <div class="w-32 h-2 bg-gray-200 rounded-full mt-1">
+                <div class="h-2 bg-blue-600 rounded-full" style="width: <%= Math.min(100, (totalWeight / (character.strength * 15)) * 100) %>%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid lg:grid-cols-3 gap-6">
+    <!-- Инвентарь персонажа (вкладки) -->
+    <div class="lg:col-span-2 bg-white rounded-lg shadow">
+        <div class="border-b px-4 pt-2">
+            <div class="flex gap-2 overflow-x-auto">
+                <% const types = Object.keys(inventoryByType); %>
+                <% if (types.length > 0) { %>
+                    <button class="type-tab active px-4 py-2 text-sm font-medium border-b-2 border-purple-600 text-purple-600" data-type="all">
+                        Все (<%= inventory.length %>)
+                    </button>
+                    <% types.forEach(type => { %>
+                        <button class="type-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:text-purple-600" data-type="<%= type %>">
+                            <%= type %> (<%= inventoryByType[type].length %>)
+                        </button>
+                    <% }) %>
+                <% } else { %>
+                    <button class="type-tab active px-4 py-2 text-sm font-medium border-b-2 border-purple-600 text-purple-600" data-type="all">
+                        Все (0)
+                    </button>
+                <% } %>
+            </div>
+        </div>
+        
+        <div class="p-4">
+            <% if (inventory.length > 0) { %>
+                <!-- Контент для каждого типа -->
+                <div id="items-all" class="type-content active">
+                    <div class="space-y-3">
+                        <% inventory.forEach(item => { %>
+                            <div class="item-card border rounded-lg overflow-hidden hover:shadow-md transition" data-item="<%= item.item_name %>">
+                                <div class="flex justify-between items-center p-3 bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="toggleItemDetails('<%= item.item_name.replace(/'/g, "\\'") %>')">
+                                    <div class="flex-1">
+                                        <div class="font-medium flex items-center gap-2 flex-wrap">
+                                            <%= item.item_name %>
+                                            <span class="text-sm text-gray-500">x<%= item.quantity %></span>
+                                            <% if (item.attunement) { %>
+                                                <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">Требует аттунмента</span>
+                                            <% } %>
+                                            <span class="text-xs px-2 py-0.5 rounded 
+                                                <%= item.rarity === 'Обычный' ? 'bg-gray-200' : '' %>
+                                                <%= item.rarity === 'Необычный' ? 'bg-green-100 text-green-800' : '' %>
+                                                <%= item.rarity === 'Редкий' ? 'bg-blue-100 text-blue-800' : '' %>
+                                                <%= item.rarity === 'Очень редкий' ? 'bg-purple-100 text-purple-800' : '' %>
+                                                <%= item.rarity === 'Легендарный' ? 'bg-yellow-100 text-yellow-800' : '' %>
+                                                <%= item.rarity === 'Артефакт' ? 'bg-red-100 text-red-800' : '' %>">
+                                                <%= item.rarity %>
+                                            </span>
+                                        </div>
+                                        <div class="text-sm text-gray-500 flex gap-3 mt-1">
+                                            <span>⚖️ <%= item.weight %> ф.</span>
+                                            <% if (item.cost) { %>
+                                                <span>💰 <%= item.cost %></span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <form method="post" action="/lc/inventory/remove" class="inline" onclick="event.stopPropagation()">
+                                            <input type="hidden" name="player" value="<%= user %>">
+                                            <input type="hidden" name="campaign_id" value="<%= camp_id %>">
+                                            <input type="hidden" name="character_name" value="<%= character.name %>">
+                                            <input type="hidden" name="item_name" value="<%= item.item_name %>">
+                                            <input type="number" name="quantity" value="1" min="1" max="<%= item.quantity %>" 
+                                                   class="w-16 border rounded px-1 py-0.5 text-sm">
+                                            <button type="submit" class="text-red-600 hover:text-red-800 text-sm px-2">-1</button>
+                                        </form>
+                                        <form method="post" action="/lc/inventory/remove" class="inline" onclick="event.stopPropagation()">
+                                            <input type="hidden" name="player" value="<%= user %>">
+                                            <input type="hidden" name="campaign_id" value="<%= camp_id %>">
+                                            <input type="hidden" name="character_name" value="<%= character.name %>">
+                                            <input type="hidden" name="item_name" value="<%= item.item_name %>">
+                                            <input type="hidden" name="remove_all" value="on">
+                                            <button type="submit" class="text-red-800 hover:text-red-950">🗑️</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div id="details-<%= item.item_name.replace(/[^a-zA-Z0-9]/g, '_') %>" class="item-details p-3 border-t bg-white" style="display: none;">
+                                    <div class="prose prose-sm max-w-none">
+                                        <h4 class="font-bold text-purple-700 mb-2">📖 Описание</h4>
+                                        <div class="text-gray-700"><%- (item.description || 'Описание отсутствует').replace(/\r\n/g, '<br>') %></div>
+                                        
+                                        <div class="grid grid-cols-2 gap-2 mt-3 text-sm">
+                                            <div><span class="font-semibold">Тип:</span> <%= item.type %></div>
+                                            <div><span class="font-semibold">Редкость:</span> <%= item.rarity %></div>
+                                            <div><span class="font-semibold">Вес:</span> <%= item.weight %> фунтов</div>
+                                            <div><span class="font-semibold">Стоимость:</span> <%= item.cost || 'Не указана' %></div>
+                                            <div><span class="font-semibold">Аттунмент:</span> <%= item.attunement ? 'Требуется' : 'Не требуется' %></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+                
+                <!-- Контент для каждого типа (дублируется, но скрыт) -->
+                <% Object.entries(inventoryByType).forEach(([type, items]) => { %>
+                    <div id="items-<%= type.replace(/[^a-zA-Z0-9]/g, '_') %>" class="type-content" style="display: none;">
+                        <div class="space-y-3">
+                            <% items.forEach(item => { %>
+                                <div class="item-card border rounded-lg overflow-hidden hover:shadow-md transition" data-item="<%= item.item_name %>">
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="toggleItemDetails('<%= item.item_name.replace(/'/g, "\\'") %>')">
+                                        <div class="flex-1">
+                                            <div class="font-medium flex items-center gap-2 flex-wrap">
+                                                <%= item.item_name %>
+                                                <span class="text-sm text-gray-500">x<%= item.quantity %></span>
+                                                <% if (item.attunement) { %>
+                                                    <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">Требует аттунмента</span>
+                                                <% } %>
+                                                <span class="text-xs px-2 py-0.5 rounded 
+                                                    <%= item.rarity === 'Обычный' ? 'bg-gray-200' : '' %>
+                                                    <%= item.rarity === 'Необычный' ? 'bg-green-100 text-green-800' : '' %>
+                                                    <%= item.rarity === 'Редкий' ? 'bg-blue-100 text-blue-800' : '' %>
+                                                    <%= item.rarity === 'Очень редкий' ? 'bg-purple-100 text-purple-800' : '' %>
+                                                    <%= item.rarity === 'Легендарный' ? 'bg-yellow-100 text-yellow-800' : '' %>
+                                                    <%= item.rarity === 'Артефакт' ? 'bg-red-100 text-red-800' : '' %>">
+                                                    <%= item.rarity %>
+                                                </span>
+                                            </div>
+                                            <div class="text-sm text-gray-500 flex gap-3 mt-1">
+                                                <span>⚖️ <%= item.weight %> ф.</span>
+                                                <% if (item.cost) { %>
+                                                    <span>💰 <%= item.cost %></span>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <form method="post" action="/lc/inventory/remove" class="inline" onclick="event.stopPropagation()">
+                                                <input type="hidden" name="player" value="<%= user %>">
+                                                <input type="hidden" name="campaign_id" value="<%= camp_id %>">
+                                                <input type="hidden" name="character_name" value="<%= character.name %>">
+                                                <input type="hidden" name="item_name" value="<%= item.item_name %>">
+                                                <input type="number" name="quantity" value="1" min="1" max="<%= item.quantity %>" 
+                                                       class="w-16 border rounded px-1 py-0.5 text-sm">
+                                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm px-2">-1</button>
+                                            </form>
+                                            <form method="post" action="/lc/inventory/remove" class="inline" onclick="event.stopPropagation()">
+                                                <input type="hidden" name="player" value="<%= user %>">
+                                                <input type="hidden" name="campaign_id" value="<%= camp_id %>">
+                                                <input type="hidden" name="character_name" value="<%= character.name %>">
+                                                <input type="hidden" name="item_name" value="<%= item.item_name %>">
+                                                <input type="hidden" name="remove_all" value="on">
+                                                <button type="submit" class="text-red-800 hover:text-red-950">🗑️</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div id="details-<%= item.item_name.replace(/[^a-zA-Z0-9]/g, '_') %>" class="item-details p-3 border-t bg-white" style="display: none;">
+                                        <div class="prose prose-sm max-w-none">
+                                            <h4 class="font-bold text-purple-700 mb-2">📖 Описание</h4>
+                                            <div class="text-gray-700"><%- (item.description || 'Описание отсутствует').replace(/\r\n/g, '<br>') %></div>
+                                            
+                                            <div class="grid grid-cols-2 gap-2 mt-3 text-sm">
+                                                <div><span class="font-semibold">Тип:</span> <%= item.type %></div>
+                                                <div><span class="font-semibold">Редкость:</span> <%= item.rarity %></div>
+                                                <div><span class="font-semibold">Вес:</span> <%= item.weight %> фунтов</div>
+                                                <div><span class="font-semibold">Стоимость:</span> <%= item.cost || 'Не указана' %></div>
+                                                <div><span class="font-semibold">Аттунмент:</span> <%= item.attunement ? 'Требуется' : 'Не требуется' %></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="text-center py-12 text-gray-500">
+                    <p>Инвентарь пуст</p>
+                    <p class="text-sm mt-2">Добавьте предметы через панель справа</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+    
+    <!-- Добавление предметов -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">➕ Добавить предмет</h2>
+        
+        <form method="post" action="/lc/inventory/add">
+            <input type="hidden" name="player" value="<%= user %>">
+            <input type="hidden" name="campaign_id" value="<%= camp_id %>">
+            <input type="hidden" name="character_name" value="<%= character.name %>">
+            
+            <!-- Кастомный выпадающий список с поиском -->
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">Предмет</label>
+                <div class="custom-select-wrapper relative">
+                    <div class="custom-select border rounded px-3 py-2 bg-white cursor-pointer flex justify-between items-center" onclick="toggleDropdown()">
+                        <span id="selected-item-text" class="text-gray-500">Выберите предмет</span>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <input type="hidden" name="item_name" id="selected-item-input" required>
+                    
+                    <div id="item-dropdown" class="custom-options absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg hidden" style="max-height: 300px; overflow-y: auto;">
+                        <!-- Поле поиска -->
+                        <div class="p-2 border-b sticky top-0 bg-white">
+                            <input type="text" 
+                                   id="item-search" 
+                                   placeholder="🔍 Поиск по названию..." 
+                                   class="w-full border rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                   oninput="filterItems()">
+                        </div>
+                        
+                        <!-- Список предметов -->
+                        <div id="items-list" class="py-1">
+                            <% Object.entries(itemsByType).forEach(([type, items]) => { %>
+                                <div class="item-group" data-group="<%= type %>">
+                                    <div class="px-3 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50"><%= type %></div>
+                                    <% items.forEach(item => { %>
+                                        <div class="item-option px-3 py-2 hover:bg-purple-50 cursor-pointer flex justify-between items-center" 
+                                             data-value="<%= item.name %>"
+                                             data-type="<%= type %>"
+                                             data-name="<%= item.name.toLowerCase() %>"
+                                             onclick="selectItem('<%= item.name.replace(/'/g, "\\'") %>', '<%= item.rarity %>')">
+                                            <span><%= item.name %></span>
+                                            <span class="text-xs px-2 py-0.5 rounded 
+                                                <%= item.rarity === 'Обычный' ? 'bg-gray-200' : '' %>
+                                                <%= item.rarity === 'Необычный' ? 'bg-green-100 text-green-800' : '' %>
+                                                <%= item.rarity === 'Редкий' ? 'bg-blue-100 text-blue-800' : '' %>
+                                                <%= item.rarity === 'Очень редкий' ? 'bg-purple-100 text-purple-800' : '' %>
+                                                <%= item.rarity === 'Легендарный' ? 'bg-yellow-100 text-yellow-800' : '' %>
+                                                <%= item.rarity === 'Артефакт' ? 'bg-red-100 text-red-800' : '' %>">
+                                                <%= item.rarity %>
+                                            </span>
+                                        </div>
+                                    <% }) %>
+                                </div>
+                            <% }) %>
+                        </div>
+                        
+                        <div id="no-results" class="text-center py-4 text-gray-500 text-sm hidden">
+                            Предметы не найдены
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">Количество</label>
+                <input type="number" name="quantity" value="1" min="1" class="w-full border rounded px-3 py-2">
+            </div>
+            
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+                Добавить в инвентарь
+            </button>
+        </form>
+        
+        <div class="mt-6 pt-4 border-t">
+            <h3 class="font-semibold mb-2">✨ Быстрое создание предмета</h3>
+            <a href="/manage/items/new" class="text-sm text-purple-600 hover:underline">Создать новый предмет →</a>
+        </div>
+        
+        <div class="mt-4 pt-4 border-t">
+            <h3 class="font-semibold mb-2">📊 Статистика</h3>
+            <div class="text-sm text-gray-600 space-y-1">
+                <div>📦 Всего предметов: <%= inventory.length %></div>
+                <div>⚖️ Общий вес: <%= totalWeight %> / <%= character.strength * 15 %> ф.</div>
+                <div>⭐ Редких предметов: <%= inventory.filter(i => i.rarity === 'Редкий' || i.rarity === 'Очень редкий').length %></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Переключение вкладок по типам
+    document.querySelectorAll('.type-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const type = this.dataset.type;
+            
+            // Обновляем активную вкладку
+            document.querySelectorAll('.type-tab').forEach(t => {
+                t.classList.remove('active', 'border-purple-600', 'text-purple-600');
+                t.classList.add('border-transparent');
+            });
+            this.classList.add('active', 'border-purple-600', 'text-purple-600');
+            this.classList.remove('border-transparent');
+            
+            // Показываем нужный контент
+            document.querySelectorAll('.type-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            const targetId = type === 'all' ? 'items-all' : `items-${type.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            const target = document.getElementById(targetId);
+            if (target) target.style.display = 'block';
+        });
+    });
+    
+    // Переключение деталей предмета
+    function toggleItemDetails(itemName) {
+        const safeName = itemName.replace(/[^a-zA-Z0-9]/g, '_');
+        const detailsDiv = document.getElementById(`details-${safeName}`);
+        if (detailsDiv) {
+            if (detailsDiv.style.display === 'none' || !detailsDiv.style.display) {
+                detailsDiv.style.display = 'block';
+            } else {
+                detailsDiv.style.display = 'none';
+            }
+        }
+    }
+    
+    // Функции для кастомного выпадающего списка
+    function toggleDropdown() {
+        const dropdown = document.getElementById('item-dropdown');
+        dropdown.classList.toggle('hidden');
+        if (!dropdown.classList.contains('hidden')) {
+            document.getElementById('item-search').focus();
+        }
+    }
+    
+    function selectItem(itemName, rarity) {
+        document.getElementById('selected-item-text').textContent = `${itemName} (${rarity})`;
+        document.getElementById('selected-item-text').classList.remove('text-gray-500');
+        document.getElementById('selected-item-input').value = itemName;
+        document.getElementById('item-dropdown').classList.add('hidden');
+        document.getElementById('item-search').value = '';
+        filterItems(); // Сбросить фильтр
+    }
+    
+    function filterItems() {
+        const searchTerm = document.getElementById('item-search').value.toLowerCase();
+        const items = document.querySelectorAll('.item-option');
+        const groups = document.querySelectorAll('.item-group');
+        let hasVisibleItems = false;
+        
+        groups.forEach(group => {
+            let groupHasVisibleItems = false;
+            const groupItems = group.querySelectorAll('.item-option');
+            
+            groupItems.forEach(item => {
+                const itemName = item.dataset.name;
+                if (itemName.includes(searchTerm)) {
+                    item.style.display = '';
+                    groupHasVisibleItems = true;
+                    hasVisibleItems = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Показываем или скрываем группу
+            if (groupHasVisibleItems) {
+                group.style.display = '';
+            } else {
+                group.style.display = 'none';
+            }
+        });
+        
+        // Показываем сообщение, если ничего не найдено
+        const noResults = document.getElementById('no-results');
+        if (hasVisibleItems) {
+            noResults.classList.add('hidden');
+        } else {
+            noResults.classList.remove('hidden');
+        }
+    }
+    
+    // Закрытие выпадающего списка при клике вне его
+    document.addEventListener('click', function(event) {
+        const wrapper = document.querySelector('.custom-select-wrapper');
+        const dropdown = document.getElementById('item-dropdown');
+        
+        if (wrapper && !wrapper.contains(event.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+    
+    // Открываем первый предмет по умолчанию (опционально)
+    document.addEventListener('DOMContentLoaded', function() {
+        // Можно раскомментировать, чтобы первый предмет был открыт
+        // const firstItem = document.querySelector('.item-card');
+        // if (firstItem) {
+        //     const itemName = firstItem.querySelector('.font-medium').textContent.trim();
+        //     toggleItemDetails(itemName);
+        // }
+    });
+</script>
+
+<style>
+    .type-tab.active {
+        border-bottom-width: 2px;
+    }
+    .item-card {
+        transition: all 0.2s ease;
+    }
+    .item-details {
+        animation: slideDown 0.2s ease;
+    }
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .prose p {
+        margin-bottom: 0.5rem;
+    }
+    .prose strong {
+        color: #4a1d6d;
+    }
+    
+    /* Стили для кастомного выпадающего списка */
+    .custom-select {
+        user-select: none;
+    }
+    .custom-options {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .item-option:hover {
+        background-color: #f3e8ff;
+    }
+    #item-search:focus {
+        outline: none;
+        ring-color: #8b5cf6;
+    }
+    /* Плавная анимация для dropdown */
+    .custom-options {
+        animation: fadeIn 0.15s ease;
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,230 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<%
+  // Функция для модификатора характеристики
+  function charModifier(value) {
+    return Math.floor((value - 10) / 2);
+  }
+  
+  // Безопасная проверка массивов
+  const safeSpells = spells || [];
+  const safeAbilities = abilities || [];
+  const safeAppeals = appeals || [];
+%>
+
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex justify-between items-start flex-wrap gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800"><%= character.name %></h1>
+            <div class="flex gap-2 mt-2 flex-wrap">
+                <span class="bg-purple-100 px-3 py-1 rounded"><%= character.class %></span>
+                <span class="bg-gray-100 px-3 py-1 rounded">Уровень <%= character.level %></span>
+                <% if (character.archetype) { %>
+                    <span class="bg-blue-100 px-3 py-1 rounded"><%= character.archetype %></span>
+                <% } %>
+            </div>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <a href="/lc/character_change/<%= user %>/<%= camp_id %>/<%= encodeURIComponent(character.name) %>"
+               class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition text-center">
+                ✏️ Редактировать
+            </a>
+            <form method="post" action="/lc/levelup/<%= (parseInt(character.level) || 1) + 1 %>/<%= user %>/<%= camp_id %>/<%= encodeURIComponent(character.name) %>" class="w-full sm:w-auto">
+                <button type="submit" class="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                    ⬆️ Повысить уровень
+                </button>
+            </form>
+            <a href="/lc/delete/<%= user %>/<%= camp_id %>/<%= encodeURIComponent(character.name) %>"
+               onclick="return confirm('Удалить персонажа?')"
+               class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition text-center">
+                🗑️ Удалить
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Характеристики -->
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h2 class="text-xl font-bold mb-4">📊 Характеристики</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <% const stats = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+           const statNames = ['Сила', 'Ловкость', 'Выносливость', 'Интеллект', 'Мудрость', 'Харизма'];
+           statNames.forEach((name, idx) => { 
+               const stat = stats[idx];
+               const val = character[stat] || 10;
+        %>
+            <div class="text-center p-3 bg-gray-50 rounded">
+                <div class="text-sm text-gray-600"><%= name %></div>
+                <div class="text-2xl font-bold"><%= val %></div>
+                <div class="text-sm <%= charModifier(val) >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= charModifier(val) >= 0 ? '+' : '' %><%= charModifier(val) %>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+</div>
+
+<!-- Вкладки -->
+<div>
+    <div class="flex gap-2 border-b mb-4 flex-wrap">
+        <button class="tablinks px-4 py-2 rounded-t hover:bg-gray-100 transition" onclick="openTab(event, 'abilities')">
+            ⚔️ Умения
+        </button>
+        <button class="tablinks px-4 py-2 rounded-t hover:bg-gray-100 transition" onclick="openTab(event, 'spells')">
+            ✨ Заклинания
+        </button>
+        <% if (hasClassFeatures) { %>
+            <button class="tablinks px-4 py-2 rounded-t hover:bg-gray-100 transition" onclick="openTab(event, 'appeals')">
+                🌑 Классовые настройки
+            </button>
+        <% } %>
+        <a href="/lc/<%= user %>/<%= camp_id %>/<%= encodeURIComponent(character.name) %>/inventory"
+           class="px-4 py-2 rounded-t hover:bg-gray-100 transition">
+            🎒 Инвентарь
+        </a>
+    </div>
+    
+    <!-- Умения -->
+    <div id="abilities" class="tabcontent bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">Умения</h2>
+        <% if (safeAbilities.length > 0) { %>
+            <div class="space-y-4">
+                <% safeAbilities.forEach(ability => { %>
+                    <div class="border-l-4 border-purple-600 pl-4">
+                        <div class="font-bold"><%= ability.name %></div>
+                        <div class="text-sm text-gray-500">Уровень <%= ability.level %></div>
+                        <div class="text-gray-700 mt-1"><%- (ability.description || '').replace(/\r\n/g, '<br>') %></div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } else { %>
+            <p class="text-gray-500">Нет умений для отображения</p>
+        <% } %>
+    </div>
+    
+    <!-- Заклинания -->
+    <div id="spells" class="tabcontent bg-white rounded-lg shadow p-6" style="display: none;">
+        <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <h2 class="text-xl font-bold">Заклинания</h2>
+            <div class="flex gap-2">
+                <a href="/lc/readySpellList/<%= user %>/<%= camp_id %>/<%= encodeURIComponent(character.name) %>"
+                   class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                    📝 Подготовить заклинания
+                </a>
+                <a href="/lc/fullSpellList/<%= user %>/<%= camp_id %>/<%= encodeURIComponent(character.name) %>"
+                   class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+                    ➕ Добавить заклинания
+                </a>
+            </div>
+        </div>
+        
+        <div class="subtab flex gap-2 border-b mb-4">
+            <button class="subtablinks px-3 py-1 rounded-t" onclick="subOpenTab(event, 'prepared')">
+                📖 Подготовленные
+            </button>
+            <button class="subtablinks px-3 py-1 rounded-t" onclick="subOpenTab(event, 'known')">
+                📚 Изученные
+            </button>
+        </div>
+        
+        <div id="prepared" class="subtabcontent">
+            <% const preparedSpells = safeSpells.filter(s => s.readiness == 1); %>
+            <% if (preparedSpells.length > 0) { %>
+                <div class="space-y-4">
+                    <% preparedSpells.forEach(spell => { %>
+                        <div class="border-l-4 border-green-600 pl-4">
+                            <div class="font-bold"><%= spell.name %></div>
+                            <div class="text-sm text-gray-500">Уровень <%= spell.level %></div>
+                            <div class="text-gray-700 mt-1"><%- (spell.description || '').replace(/\r\n/g, '<br>') %></div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } else { %>
+                <p class="text-gray-500">Нет подготовленных заклинаний</p>
+            <% } %>
+        </div>
+        
+        <div id="known" class="subtabcontent" style="display: none;">
+            <% if (safeSpells.length > 0) { %>
+                <div class="space-y-4">
+                    <% safeSpells.forEach(spell => { %>
+                        <div class="border-l-4 border-blue-600 pl-4">
+                            <div class="font-bold">
+                                <%= spell.name %>
+                                <% if (spell.readiness == 1) { %>
+                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded ml-2">Подготовлено</span>
+                                <% } %>
+                            </div>
+                            <div class="text-sm text-gray-500">Уровень <%= spell.level %></div>
+                            <div class="text-gray-700 mt-1"><%- (spell.description || '').replace(/\r\n/g, '<br>') %></div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } else { %>
+                <p class="text-gray-500">Нет изученных заклинаний</p>
+            <% } %>
+        </div>
+    </div>
+    
+   <!-- Классовые настройки (воззвания/инфузии) -->
+    <% if (hasClassFeatures) { %>
+        <div id="appeals" class="tabcontent bg-white rounded-lg shadow p-6" style="display: none;">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">🌑 Классовые настройки</h2>
+                <a href="/lc/fullAppealsList/<%= user %>/<%= camp_id %>/<%= encodeURIComponent(character.name) %>"
+                   class="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700">
+                    🔄 Сменить настройки
+                </a>
+            </div>
+            <% if (appeals && appeals.length > 0) { %>
+                <div class="space-y-4">
+                    <% appeals.forEach(appeal => { %>
+                        <div class="border-l-4 border-purple-600 pl-4">
+                            <div class="font-bold"><%= appeal.name %></div>
+                            <div class="text-sm text-gray-500">Уровень <%= appeal.level %></div>
+                            <div class="text-gray-700 mt-1"><%- appeal.description.replace(/\r\n/g, '<br>') %></div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } else { %>
+                <p class="text-gray-500">Нет классовых настроек</p>
+            <% } %>
+        </div>
+    <% } %>
+</div>
+
+<script>
+    function openTab(evt, tabName) {
+        const tabcontents = document.getElementsByClassName("tabcontent");
+        for (let i = 0; i < tabcontents.length; i++) {
+            tabcontents[i].style.display = "none";
+        }
+        const tablinks = document.getElementsByClassName("tablinks");
+        for (let i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("tab-active");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.classList.add("tab-active");
+    }
+    
+    function subOpenTab(evt, tabName) {
+        const subtabcontents = document.getElementsByClassName("subtabcontent");
+        for (let i = 0; i < subtabcontents.length; i++) {
+            subtabcontents[i].style.display = "none";
+        }
+        const subtablinks = document.getElementsByClassName("subtablinks");
+        for (let i = 0; i < subtablinks.length; i++) {
+            subtablinks[i].classList.remove("subtab-active");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.classList.add("subtab-active");
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const defaultTab = document.querySelector('.tablinks');
+        if (defaultTab) defaultTab.click();
+    });
+</script>
+
+<%- include('../partials/footer') %>

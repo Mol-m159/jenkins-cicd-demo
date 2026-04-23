@@ -1,0 +1,17 @@
+.spell-description {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.spell-description p {
+    margin-bottom: 0.75rem;
+}
+
+.spell-description ul, .spell-description ol {
+    margin-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.spell-description li {
+    margin-bottom: 0.25rem;
+}

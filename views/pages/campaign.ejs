@@ -1,0 +1,39 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">🏰 <%= campaign.name %></h1>
+    <p class="text-gray-600 mt-2">ID кампании: <%= campaign.campaign_id %></p>
+</div>
+
+<div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-bold mb-4">👥 Персонажи в кампании</h2>
+    
+    <% if (characters && characters.length > 0) { %>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <% characters.forEach(char => { %>
+                <div class="border rounded-lg p-4 hover:shadow-md transition">
+                    <a href="/lc/<%= char.player %>/<%= campaign.campaign_id %>/<%= encodeURIComponent(char.name) %>"
+                       class="text-lg font-semibold text-blue-600 hover:underline">
+                        <%= char.name %>
+                    </a>
+                    <div class="text-sm text-gray-600 mt-1">
+                        <span class="bg-purple-100 px-2 py-0.5 rounded"><%= char.class %></span>
+                        уровень <%= char.level %>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-2">
+                        Игрок: <%= char.player_name %>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    <% } else { %>
+        <div class="text-center py-8 text-gray-500">
+            <p>В этой кампании пока нет персонажей</p>
+            <a href="/lc/newcharacter/<%= user %>" class="text-blue-600 hover:underline mt-2 inline-block">
+                Пригласите игроков создать персонажей
+            </a>
+        </div>
+    <% } %>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,35 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="text-center py-12">
+    <h1 class="text-5xl font-bold text-purple-800 mb-4">🎲 D&D Manager</h1>
+    <p class="text-xl text-gray-600 mb-8">Управляйте персонажами, заклинаниями и кампаниями в одном месте</p>
+    
+    <div class="flex gap-4 justify-center flex-wrap">
+        <a href="/search" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
+            📖 Поиск заклинаний
+        </a>
+        <a href="/classes" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
+            🎭 Классы
+        </a>
+
+        <% if (!user) { %>
+            <a href="/entranse" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
+                🔑 Войти
+            </a>
+            <a href="/registration" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                ✨ Зарегистрироваться
+            </a>
+        <% } else { %>
+                    <a href="/manage/spells" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
+            ✨ Заклинания
+        </a>
+        <a href="/manage/items" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
+            🎒 Предметы</a>
+            <a href="/lc/<%= user %>" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                📋 Личный кабинет
+            </a>
+        <% } %>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

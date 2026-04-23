@@ -1,0 +1,53 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="max-w-4xl mx-auto bg-white rounded-lg shadow p-6">
+    <h1 class="text-2xl font-bold mb-2">🌑 Выбор классовых настройек</h1>
+    <p class="text-gray-600 mb-6">
+        Персонаж: <strong><%= character.name %></strong> 
+        (<%= character.class %> <%= character.level %> уровень)<br>
+        Можно выбрать до <strong><%= maxAppeals %></strong> классовых настройек
+    </p>
+    
+    <form method="post" action="/lc/fullAppealsListPost/<%= user %>/<%= camp_id %>/<%= encodeURIComponent(character.name) %>">
+        <div class="space-y-4 mb-6">
+            <% appeals.forEach(appeal => { 
+                const isSelected = currentAppeals && currentAppeals.includes(appeal.name);
+            %>
+                <div class="border rounded-lg p-4 hover:bg-gray-50">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" name="appeals" value="<%= appeal.name %>" 
+                               class="mt-1" <%= isSelected ? 'checked' : '' %>>
+                        <div class="flex-1">
+                            <div class="font-bold text-lg">
+                                <%= appeal.name %>
+                                <span class="text-sm text-gray-500 ml-2">уровень <%= appeal.level %></span>
+                            </div>
+                            <div class="text-gray-700 mt-2"><%- (appeal.description || '').replace(/\r\n/g, '<br>') %></div>
+                        </div>
+                    </label>
+                </div>
+            <% }) %>
+        </div>
+        
+        <% if (appeals.length === 0) { %>
+            <div class="text-center py-8 text-gray-500">
+                <p>Нет доступных классовых настройек</p>
+                <a href="/manage/appeals" class="text-blue-600 hover:underline mt-2 inline-block">
+                    Сначала добавьте классовые настройки в библиотеку
+                </a>
+            </div>
+        <% } %>
+        
+        <div class="flex gap-3 mt-6">
+            <button type="submit" class="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700">
+                Сохранить классовые настройки
+            </button>
+            <a href="/lc/<%= user %>/<%= camp_id %>/<%= encodeURIComponent(character.name) %>" 
+               class="bg-gray-300 px-6 py-2 rounded hover:bg-gray-400">
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>

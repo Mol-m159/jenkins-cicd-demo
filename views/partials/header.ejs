@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'D&D Manager' %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .tab-active {
+            background-color: #9333ea !important;
+            color: white !important;
+        }
+        .subtab-active {
+            background-color: #c084fc !important;
+            color: white !important;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            right: 0;
+            margin-top: 0.5rem;
+            width: 14rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s ease, visibility 0.15s ease;
+        }
+        
+        .dropdown-trigger:hover .dropdown-menu,
+        .dropdown-menu:hover {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-purple-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-4">
+            <a href="/" class="text-2xl font-bold hover:text-purple-200 transition">🎲 D&D Manager</a>
+            
+            <nav class="flex gap-4 items-center flex-wrap">
+                <a href="/search" class="hover:text-purple-200 transition">📖 Поиск заклинаний</a>
+                
+                <% if (user) { %>
+                    <!-- Выпадающее меню Управление -->
+                    <div class="dropdown-trigger relative">
+                        <span class="cursor-pointer hover:text-purple-200 transition block py-1">⚙️ Управление</span>
+                        <div class="dropdown-menu">
+                            <a href="/manage/spells" class="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors">
+                                📖 Заклинания
+                            </a>
+                            <a href="/manage/abilities" class="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors">
+                                ⚔️ Способности
+                            </a>
+                            <a href="/manage/items" class="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors">
+                                🎒 Предметы
+                            </a>
+                            <a href="/manage/classes" class="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors">
+                                🎭 Классы и архетипы
+                            </a>
+                            <a href="/manage/spell-links" class="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors">
+                                🔗 Привязки заклинаний
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Выпадающее меню пользователя -->
+                    <div class="dropdown-trigger relative">
+                        <span class="cursor-pointer hover:text-purple-200 transition block py-1">👤 <%= user %></span>
+                        <div class="dropdown-menu">
+                            <a href="/lc/<%= user %>" class="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors">
+                                📋 Мои персонажи
+                            </a>
+                            <a href="/classes" class="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors">
+                                🎭 Справочник классов
+                            </a>
+                            <a href="/lc_exit" class="block px-4 py-2 text-red-600 hover:bg-gray-100 transition-colors border-t">
+                                🚪 Выйти
+                            </a>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <a href="/entranse" class="bg-green-600 px-4 py-1 rounded hover:bg-green-700 transition">Вход</a>
+                    <a href="/registration" class="bg-blue-600 px-4 py-1 rounded hover:bg-blue-700 transition">Регистрация</a>
+                <% } %>
+            </nav>
+        </div>
+    </header>
+    <main class="container mx-auto px-4 py-8">

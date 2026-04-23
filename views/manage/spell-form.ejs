@@ -1,0 +1,102 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="max-w-3xl mx-auto bg-white rounded-lg shadow p-6">
+    <h1 class="text-2xl font-bold mb-6"><%= isEdit ? '✏️ Редактирование заклинания' : '✨ Новое заклинание' %></h1>
+    
+    <form method="post" action="<%= isEdit ? `/manage/spells/update/${encodeURIComponent(spell.name)}` : '/manage/spells' %>">
+        <!-- Название -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Название *</label>
+            <input type="text" name="name" value="<%= spell?.name || '' %>" required
+                   class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600">
+            <p class="text-xs text-gray-500 mt-1">Уникальное название заклинания</p>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <!-- Школа -->
+            <div>
+                <label class="block text-gray-700 mb-2">Школа магии *</label>
+                <select name="school" required class="w-full border rounded px-3 py-2">
+                    <% schools.forEach(s => { %>
+                        <option value="<%= s %>" <%= spell?.school === s ? 'selected' : '' %>><%= s %></option>
+                    <% }) %>
+                </select>
+            </div>
+            
+            <!-- Уровень -->
+            <div>
+                <label class="block text-gray-700 mb-2">Уровень *</label>
+                <select name="level" required class="w-full border rounded px-3 py-2">
+                    <% for(let i = 0; i <= 9; i++) { %>
+                        <option value="<%= i %>" <%= spell?.level == i ? 'selected' : '' %>>
+                            <%= i === 0 ? 'Заговор (0 уровень)' : i + ' уровень' %>
+                        </option>
+                    <% } %>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Дистанция -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Дистанция (футы)</label>
+            <input type="number" name="range_spell" min="0" value="<%= spell?.range_spell || 0 %>"
+                   class="w-full border rounded px-3 py-2">
+            <p class="text-xs text-gray-500 mt-1">0 - на себя, 30 - ближний бой и т.д.</p>
+        </div>
+        
+        <!-- Описание -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Описание</label>
+            <textarea name="description" rows="6" class="w-full border rounded px-3 py-2 font-mono text-sm"
+                      placeholder="Опишите действие заклинания...&#10;Поддерживается HTML разметка (br, strong, em и т.д.)"><%= spell?.description || '' %></textarea>
+            <p class="text-xs text-gray-500 mt-1">Поддерживается HTML. Для переноса строки используйте &lt;br&gt;</p>
+        </div>
+        
+        <!-- Привязки к классам -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">📚 Доступно для классов</label>
+            <div class="border rounded p-3 max-h-48 overflow-y-auto bg-gray-50">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <% classes.forEach(cls => { 
+                        const isChecked = isEdit ? (boundClasses && boundClasses.includes(cls.class_name)) : false;
+                    %>
+                        <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                            <input type="checkbox" name="classes" value="<%= cls.class_name %>" <%= isChecked ? 'checked' : '' %>>
+                            <span><%= cls.class_name %></span>
+                        </label>
+                    <% }) %>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Выберите классы, которые могут использовать это заклинание</p>
+        </div>
+        
+        <!-- Привязки к архетипам -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">🎭 Доступно для архетипов</label>
+            <div class="border rounded p-3 max-h-48 overflow-y-auto bg-gray-50">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <% archetypes.forEach(arch => { 
+                        const isChecked = isEdit ? (boundArchetypes && boundArchetypes.includes(arch.name)) : false;
+                    %>
+                        <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                            <input type="checkbox" name="archetypes" value="<%= arch.name %>" <%= isChecked ? 'checked' : '' %>>
+                            <span><span class="text-purple-600 text-xs"><%= arch.class %></span> → <%= arch.name %></span>
+                        </label>
+                    <% }) %>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Выберите архетипы, которые могут использовать это заклинание</p>
+        </div>
+        
+        <div class="flex gap-3 mt-6">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+                <%= isEdit ? 'Сохранить изменения' : 'Создать заклинание' %>
+            </button>
+            <a href="/manage/spells" class="bg-gray-300 px-6 py-2 rounded hover:bg-gray-400 transition">
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>
